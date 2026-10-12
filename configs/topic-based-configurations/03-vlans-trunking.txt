@@ -1,0 +1,44 @@
+! ============================================================
+! 03 - VLANs, access ports and 802.1Q trunking (switch)
+! ============================================================
+configure terminal
+vlan 10
+ name SALES
+vlan 20
+ name ENGINEERING
+vlan 30
+ name VOICE
+vlan 99
+ name MANAGEMENT
+vlan 999
+ name BLACKHOLE-NATIVE
+!
+! Access ports
+interface range f0/1 - 10
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface range f0/11 - 20
+ switchport mode access
+ switchport access vlan 20
+ switchport voice vlan 30
+ spanning-tree portfast
+!
+! Trunk to another switch / router
+interface g0/1
+ description TRUNK-TO-DIST
+ switchport trunk encapsulation dot1q    ! omit on switches that only support dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 10,20,30,99,999
+end
+copy running-config startup-config
+
+! ---------- Verification ----------
+! show vlan brief
+! show interfaces trunk
+! show interfaces g0/1 switchport
+! show mac address-table

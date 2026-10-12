@@ -1,0 +1,52 @@
+! ============================================================
+! 04 - Inter-VLAN routing
+! ============================================================
+
+! ---------- Option A: Router-on-a-stick (router) ----------
+configure terminal
+interface g0/0
+ no shutdown                              ! physical interface: no IP address
+!
+interface g0/0.10
+ description GATEWAY-VLAN10
+ encapsulation dot1q 10
+ ip address 192.168.10.1 255.255.255.0
+!
+interface g0/0.20
+ description GATEWAY-VLAN20
+ encapsulation dot1q 20
+ ip address 192.168.20.1 255.255.255.0
+!
+interface g0/0.99
+ description MANAGEMENT-NATIVE
+ encapsulation dot1q 99 native
+ ip address 192.168.99.1 255.255.255.0
+end
+! Switch side: connected port must be a trunk allowing VLANs 10,20,99.
+
+! ---------- Option B: Layer 3 switch with SVIs ----------
+configure terminal
+ip routing
+!
+interface vlan 10
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+interface vlan 20
+ ip address 192.168.20.1 255.255.255.0
+ no shutdown
+!
+! Routed (L3) uplink to a router/core
+interface g1/0/1
+ no switchport
+ ip address 10.0.0.2 255.255.255.252
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 10.0.0.1
+end
+
+! ---------- Verification ----------
+! show ip interface brief
+! show ip route
+! show interfaces trunk            (on the switch)
+! ping 192.168.20.10 source vlan 10
+! Hosts: default gateway = the VLAN's SVI / sub-interface IP

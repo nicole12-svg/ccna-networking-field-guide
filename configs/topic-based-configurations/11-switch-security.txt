@@ -1,0 +1,53 @@
+! ============================================================
+! 11 - Switch security: port security, DHCP snooping, DAI, hardening
+! ============================================================
+configure terminal
+
+! ---------- Port security ----------
+interface range f0/1 - 10
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict      ! protect | restrict | shutdown (default)
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+! Optional auto-recovery for err-disabled ports
+errdisable recovery cause psecure-violation
+errdisable recovery interval 300
+
+! ---------- DHCP snooping ----------
+ip dhcp snooping
+ip dhcp snooping vlan 10,20
+interface g0/1                                    ! uplink toward DHCP server / router
+ ip dhcp snooping trust
+interface range f0/1 - 10
+ ip dhcp snooping limit rate 15                   ! packets per second
+
+! ---------- Dynamic ARP Inspection ----------
+ip arp inspection vlan 10,20
+interface g0/1
+ ip arp inspection trust
+! Optional extra validation:
+! ip arp inspection validate src-mac dst-mac ip
+
+! ---------- VLAN hopping / hardening ----------
+interface range f0/11 - 24
+ description UNUSED
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+no cdp run                                        ! or disable per untrusted interface
+end
+copy running-config startup-config
+
+! ---------- Verification ----------
+! show port-security
+! show port-security interface f0/1
+! show port-security address
+! show errdisable recovery
+! show ip dhcp snooping binding
+! show ip dhcp snooping
+! show ip arp inspection
+! show interfaces status err-disabled

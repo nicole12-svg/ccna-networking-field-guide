@@ -1,0 +1,42 @@
+! ============================================================
+! 02 - Secure remote management (SSH v2) and switch SVI
+! ============================================================
+configure terminal
+hostname SW1
+ip domain-name lab.local
+!
+username admin privilege 15 secret Adm1nPass!
+!
+crypto key generate rsa modulus 2048
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+login block-for 120 attempts 3 within 60  ! brute-force protection
+!
+! Management SVI on a switch
+interface vlan 99
+ description MANAGEMENT
+ ip address 192.168.99.11 255.255.255.0
+ no shutdown
+ip default-gateway 192.168.99.1
+!
+line vty 0 15
+ login local
+ transport input ssh                      ! SSH only, no Telnet
+ exec-timeout 5 0
+ access-class MGMT-ONLY in                ! optional: see 10-acls.txt
+!
+! Disable unused ports (switch)
+interface range g1/0/10 - 24
+ description UNUSED
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+end
+copy running-config startup-config
+
+! ---------- Verification ----------
+! show ip ssh
+! show ssh
+! show users
+! ssh -l admin 192.168.99.11     (from a client/router)

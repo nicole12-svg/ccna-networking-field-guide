@@ -1,0 +1,40 @@
+! ============================================================
+! 10 - Access Control Lists
+! ============================================================
+configure terminal
+
+! ---------- Standard numbered ACL (place near destination) ----------
+access-list 10 deny   192.168.20.0 0.0.0.255
+access-list 10 permit any
+interface g0/1
+ ip access-group 10 out
+
+! ---------- Standard named ACL: restrict VTY access ----------
+ip access-list standard MGMT-ONLY
+ permit 192.168.99.0 0.0.0.255
+ deny any log
+line vty 0 15
+ access-class MGMT-ONLY in
+
+! ---------- Extended named ACL (place near source) ----------
+ip access-list extended SALES-IN
+ 10 permit tcp 192.168.10.0 0.0.0.255 host 192.168.30.10 eq 80
+ 20 permit tcp 192.168.10.0 0.0.0.255 host 192.168.30.10 eq 443
+ 30 permit udp 192.168.10.0 0.0.0.255 host 192.168.30.53 eq 53
+ 40 permit icmp 192.168.10.0 0.0.0.255 any echo
+ 50 deny   ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255 log
+ 60 permit ip 192.168.10.0 0.0.0.255 any           ! don't forget: implicit deny at the end
+interface g0/0.10
+ ip access-group SALES-IN in
+
+! ---------- Edit a named ACL by sequence number ----------
+ip access-list extended SALES-IN
+ no 40
+ 45 permit icmp 192.168.10.0 0.0.0.255 any
+end
+
+! ---------- Verification ----------
+! show access-lists
+! show ip access-lists SALES-IN
+! show ip interface g0/0.10 | include access list
+! clear access-list counters

@@ -1,0 +1,40 @@
+! ============================================================
+! 01 - Basic device configuration (router or switch)
+! Lab example only - adapt names, IPs, and interfaces.
+! ============================================================
+enable
+configure terminal
+!
+hostname R1
+no ip domain-lookup                       ! stop DNS lookups on typos
+service timestamps log datetime msec
+!
+enable secret Str0ngEnable!               ! hashed; lab password only
+service password-encryption
+security passwords min-length 10
+!
+banner motd # Authorized access only. #
+!
+line console 0
+ password C0nsolePass!
+ login
+ logging synchronous
+ exec-timeout 5 0
+!
+interface g0/0
+ description LINK-TO-SW1
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+!
+interface loopback0
+ description ROUTER-ID / TEST
+ ip address 1.1.1.1 255.255.255.255
+!
+end
+copy running-config startup-config
+
+! ---------- Verification ----------
+! show running-config
+! show ip interface brief
+! show interfaces g0/0
+! show version

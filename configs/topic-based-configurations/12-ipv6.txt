@@ -1,0 +1,43 @@
+! ============================================================
+! 12 - IPv6 addressing, static routing, and SLAAC
+! ============================================================
+configure terminal
+ipv6 unicast-routing                              ! required for routing and sending RAs
+
+interface g0/0
+ description LAN
+ ipv6 address 2001:db8:acad:1::1/64
+ ipv6 address fe80::1 link-local
+ no shutdown
+!
+interface g0/1
+ description WAN-TO-R2
+ ipv6 address 2001:db8:acad:12::1/64
+ ipv6 address fe80::1 link-local
+ no shutdown
+!
+! EUI-64 example
+! interface g0/2
+!  ipv6 address 2001:db8:acad:3::/64 eui-64
+
+! Static routes
+ipv6 route 2001:db8:acad:2::/64 2001:db8:acad:12::2        ! next-hop (global)
+ipv6 route ::/0 2001:db8:acad:12::2                         ! default
+! Link-local next hop requires an exit interface:
+! ipv6 route 2001:db8:acad:2::/64 g0/1 fe80::2
+! Floating static:
+! ipv6 route 2001:db8:acad:2::/64 2001:db8:acad:13::2 200
+
+! SLAAC is on by default (RA sent on the LAN); stateless DHCPv6 flag:
+! interface g0/0
+!  ipv6 nd other-config-flag
+! Stateful DHCPv6 flag:
+!  ipv6 nd managed-config-flag
+end
+
+! ---------- Verification ----------
+! show ipv6 interface brief
+! show ipv6 route
+! show ipv6 neighbors
+! ping 2001:db8:acad:2::1
+! Windows host: ipconfig  (look for global + link-local, default gateway fe80::1)

@@ -1,0 +1,55 @@
+! ============================================================
+! 07 - Spanning Tree and EtherChannel
+! ============================================================
+
+! ---------- Rapid PVST+ and root placement ----------
+configure terminal
+spanning-tree mode rapid-pvst
+spanning-tree vlan 10,20 root primary          ! macro: lowers priority to win root
+! or: spanning-tree vlan 10 priority 4096
+! Secondary root on the other distribution switch:
+! spanning-tree vlan 10,20 root secondary
+!
+! Edge-port protections
+interface range f0/1 - 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+! Or globally: spanning-tree portfast default / spanning-tree portfast bpduguard default
+!
+! Root guard on ports facing downstream/unsafe switches
+interface g0/3
+ spanning-tree guard root
+!
+! Optional per-interface tuning
+interface g0/1
+ spanning-tree cost 10
+ spanning-tree vlan 10 port-priority 64
+end
+
+! ---------- LACP EtherChannel (L2 trunk) ----------
+configure terminal
+interface range g0/1 - 2
+ channel-group 1 mode active                   ! use "passive" on the other end (or active)
+!
+interface port-channel 1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,99
+ switchport trunk native vlan 999
+end
+! PAgP alternative:  channel-protocol pagp + mode desirable / auto
+! Static:            channel-group 1 mode on   (both ends)
+
+! ---------- L3 EtherChannel ----------
+! interface range g1/0/1 - 2
+!  no switchport
+!  channel-group 2 mode active
+! interface port-channel 2
+!  no switchport
+!  ip address 10.0.0.1 255.255.255.252
+
+! ---------- Verification ----------
+! show spanning-tree
+! show spanning-tree vlan 10
+! show spanning-tree summary
+! show etherchannel summary
+! show interfaces port-channel 1

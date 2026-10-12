@@ -1,0 +1,28 @@
+! ============================================================
+! 05 - Static routing examples
+! Topology idea: R1 (LAN 192.168.1.0/24) --10.0.12.0/30-- R2 (LAN 192.168.2.0/24) --ISP
+! ============================================================
+
+! ---------- R1 ----------
+configure terminal
+ip route 192.168.2.0 255.255.255.0 10.0.12.2        ! next-hop route
+ip route 0.0.0.0 0.0.0.0 10.0.12.2                   ! default route
+! Floating static (backup, AD 200) via a second path:
+ip route 192.168.2.0 255.255.255.0 10.0.13.2 200
+! Summary route example:
+! ip route 192.168.0.0 255.255.252.0 10.0.12.2
+! Host route example:
+! ip route 192.168.2.10 255.255.255.255 10.0.12.2
+end
+
+! ---------- R2 (return path is required!) ----------
+configure terminal
+ip route 192.168.1.0 255.255.255.0 10.0.12.1
+ip route 0.0.0.0 0.0.0.0 203.0.113.1                 ! towards ISP
+end
+
+! ---------- Verification ----------
+! show ip route
+! show ip route static
+! ping 192.168.2.1 source g0/1           (source from the LAN interface)
+! traceroute 192.168.2.10

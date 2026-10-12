@@ -1,0 +1,35 @@
+! ============================================================
+! 09 - NAT / PAT
+! Inside: 192.168.1.0/24 (g0/0). Outside: 203.0.113.2/30 (g0/1).
+! ============================================================
+configure terminal
+interface g0/0
+ ip nat inside
+interface g0/1
+ ip nat outside
+!
+! ---------- PAT (overload) using the outside interface ----------
+access-list 1 permit 192.168.1.0 0.0.0.255
+ip nat inside source list 1 interface g0/1 overload
+!
+! ---------- PAT using a pool ----------
+! ip nat pool PUBLIC 203.0.113.10 203.0.113.12 netmask 255.255.255.248
+! ip nat inside source list 1 pool PUBLIC overload
+!
+! ---------- Dynamic NAT (no overload) ----------
+! ip nat pool DYN 203.0.113.20 203.0.113.30 netmask 255.255.255.240
+! ip nat inside source list 1 pool DYN
+!
+! ---------- Static NAT (publish an internal server) ----------
+ip nat inside source static 192.168.1.50 203.0.113.5
+! Static PAT (port forward):
+! ip nat inside source static tcp 192.168.1.50 443 203.0.113.5 443
+!
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+end
+
+! ---------- Verification ----------
+! show ip nat translations
+! show ip nat statistics
+! clear ip nat translation *
+! debug ip nat       (lab only; undebug all afterwards)

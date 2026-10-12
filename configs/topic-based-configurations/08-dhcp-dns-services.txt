@@ -1,0 +1,78 @@
+! ============================================================
+! 08 - DHCP, DHCP relay, DNS, NTP, Syslog, SNMP, HSRP
+! ============================================================
+
+! ---------- DHCP server on a router ----------
+configure terminal
+ip dhcp excluded-address 192.168.10.1 192.168.10.20
+ip dhcp excluded-address 192.168.20.1 192.168.20.20
+!
+ip dhcp pool VLAN10
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 8.8.8.8 1.1.1.1
+ domain-name lab.local
+ lease 3
+!
+ip dhcp pool VLAN20
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.1
+ dns-server 8.8.8.8
+end
+
+! ---------- DHCP relay (on the client-facing interface of the gateway) ----------
+configure terminal
+interface g0/0.20                              ! or: interface vlan 20
+ ip helper-address 10.0.0.100                  ! central DHCP server
+end
+
+! ---------- DHCP client on a router interface ----------
+! interface g0/1
+!  ip address dhcp
+
+! ---------- DNS ----------
+configure terminal
+ip domain-lookup
+ip name-server 8.8.8.8
+ip domain-name lab.local
+ip host SERVER1 192.168.10.50
+end
+
+! ---------- NTP ----------
+configure terminal
+ntp server 192.168.1.100
+! lab time source: ntp master 3
+clock timezone EAT 3
+end
+
+! ---------- Syslog ----------
+configure terminal
+service timestamps log datetime msec
+logging host 192.168.1.50
+logging trap informational
+logging buffered 16384
+end
+
+! ---------- SNMP (v2c lab; use v3 in production) ----------
+configure terminal
+snmp-server community LABREAD ro
+snmp-server host 192.168.1.50 version 2c LABREAD
+end
+
+! ---------- HSRP (R1 active) ----------
+configure terminal
+interface g0/0
+ ip address 10.0.0.2 255.255.255.0
+ standby version 2
+ standby 1 ip 10.0.0.1
+ standby 1 priority 110
+ standby 1 preempt
+end
+! R2: same but "standby 1 priority 100" (default) and its own interface IP.
+
+! ---------- Verification ----------
+! show ip dhcp binding | pool | conflict
+! show ntp status | show ntp associations
+! show logging
+! show standby brief
+! Client: ipconfig /renew, ipconfig /all, nslookup

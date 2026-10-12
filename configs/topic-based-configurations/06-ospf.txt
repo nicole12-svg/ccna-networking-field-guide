@@ -1,0 +1,30 @@
+! ============================================================
+! 06 - OSPFv2 (single area 0)
+! ============================================================
+configure terminal
+router ospf 1
+ router-id 1.1.1.1
+ auto-cost reference-bandwidth 10000          ! use same value on ALL routers
+ passive-interface default                    ! no hellos anywhere by default...
+ no passive-interface g0/0                    ! ...except toward OSPF neighbours
+ network 10.0.12.0 0.0.0.3 area 0             ! wildcard mask, not subnet mask
+ network 192.168.1.0 0.0.0.255 area 0         ! LAN stays passive (advertised, no hellos)
+ default-information originate                ! advertise default route (if present)
+!
+! Alternative: enable OSPF per interface (modern, clearer)
+interface g0/0
+ ip ospf 1 area 0
+ ip ospf network point-to-point               ! no DR/BDR election on P2P links
+ ip ospf cost 10                              ! optional manual cost
+ ip ospf priority 100                         ! DR election influence (0 = never DR)
+ ip ospf hello-interval 10
+ ip ospf dead-interval 40
+end
+
+! ---------- Verification ----------
+! show ip ospf neighbor
+! show ip ospf interface brief
+! show ip protocols
+! show ip route ospf
+! show ip ospf database
+! clear ip ospf process            (needed after changing a router-id)
