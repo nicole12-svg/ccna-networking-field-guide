@@ -1,0 +1,74 @@
+Cisco Packet Tracer — NAT & DNS Troubleshooting
+=================================================
+
+Purpose
+-------
+This file documents the key NAT commands discussed and used to restore
+connectivity in the lab. It is a reference, not a complete router backup:
+the full original configuration, IP addresses, ACL entries, and routing
+commands were not all captured in the troubleshooting notes.
+
+1. Original pool-based NAT rule
+-------------------------------
+ip nat inside source list NAT_LIST pool NAT_POOL
+
+This rule used addresses from NAT_POOL to translate traffic matched by
+NAT_LIST. The pool was identified as using private addresses, which were
+not appropriate as public translation addresses for the intended Internet
+connectivity.
+
+2. Remove the pool-based NAT rule
+---------------------------------
+no ip nat inside source list NAT_LIST pool NAT_POOL
+
+This removes the old NAT rule that referenced NAT_POOL.
+
+3. Remove the NAT pool
+----------------------
+no ip nat pool NAT_POOL
+
+Use this only if NAT_POOL is the exact pool name configured on your router
+and the pool is no longer referenced by another NAT rule. If Packet Tracer
+requires a different pool name or reports that the command is invalid,
+check the current configuration before proceeding.
+
+4. Final PAT rule
+-----------------
+ip nat inside source list NAT_LIST interface g0/0/1 overload
+
+This enables PAT for traffic matched by NAT_LIST, using the IP address of
+G0/0/1 as the translation address. The overload keyword allows multiple
+inside hosts to share that address using port numbers.
+
+5. NAT interface roles
+----------------------
+interface g0/0/0
+ ip nat inside
+
+interface g0/0/1
+ ip nat outside
+
+G0/0/0 connects toward the LAN and is the NAT inside interface.
+G0/0/1 connects toward the Internet and is the NAT outside interface.
+
+Important
+---------
+The commands above show the relevant NAT changes and interface roles
+discussed during troubleshooting. They are not a complete, paste-ready
+router configuration. Preserve the lab's existing interface IP addresses,
+ACL, routing, DNS settings, and any other required configuration.
+
+Useful verification commands
+----------------------------
+show ip interface brief
+show running-config
+show ip nat translations
+show ip nat statistics
+
+From an end host, test:
+ping <DNS-server-IP>
+ping 214.1.1.10
+ping timecard.com
+
+The observed DNS mapping in this lab was:
+timecard.com -> 214.1.1.10
