@@ -1,0 +1,49 @@
+# Troubleshooting Commands — networks.com reachability lab
+#
+# Purpose:
+# Record the key commands used to diagnose and resolve the routing issue.
+# Replace placeholders with the actual IP addresses/device names from your lab.
+# This file is not a full running-config backup.
+
+## Admin PC — identify the default gateway
+ipconfig /all
+
+## Admin PC — test gateway reachability
+ping <default-gateway-ip>
+
+## From the gateway device — inspect routes and test DNS reachability
+show ip route
+ping <dns-server-ip>
+traceroute <dns-server-ip>
+
+## SSH to the relevant router
+ssh -l Admin <router-ip>
+# Password supplied by the lab: enter it when prompted. Do not store credentials in a public repository.
+
+## On Router1 — inspect the routing table and route toward the DNS network
+show ip route
+
+## On Router3 — inspect interface status
+show ip interface brief
+# The interface connected to the DNS server was administratively down.
+# The lab prohibited changing interface administrative state, so it was left unchanged.
+
+## On the router where the existing static route was configured
+# Modify the existing route by setting its administrative distance to 112.
+# This is a replacement for the existing route statement, not an additional route.
+ip route 8.8.8.0 255.255.255.240 192.168.200.2 112
+
+## Clear routes so routing can reconverge, then verify
+clear ip route *
+show ip route
+ping <dns-server-ip>
+
+## Save the configuration
+copy running-config startup-config
+# Alternative on supported IOS devices:
+write memory
+
+## Final validation
+# From the Admin PC and another PC, open:
+# http://networks.com
+# Confirm the website is reachable.
