@@ -1,0 +1,55 @@
+# Configuration Notes — SSH Hostname Resolution Lab
+
+## 1. Root Cause
+
+The DHCP server's DNS option was disabled, and the required infrastructure device hostname-to-IP mappings were missing from its DNS settings.
+
+## 2. DHCP Server Changes
+
+Under the DHCP server's DNS settings:
+
+- Enabled the DNS option.
+- Added the infrastructure device hostnames and their corresponding IP addresses.
+- Verified that the DHCP service was enabled and the required DHCP pools were configured.
+
+Note: The changes above were applied through the server's service configuration interface. Exact CLI commands are not included because the lab was configured through the GUI.
+
+## 3. Workstation Verification
+
+### Check IP, DHCP, and DNS Settings
+
+```cmd
+ipconfig /all
+```
+
+Used to inspect the workstation's IP configuration, DHCP information, and DNS server settings.
+
+### Test DNS Server Connectivity
+
+```text
+ping <dns-server-ip>
+```
+
+Confirmed that the DNS server was reachable.
+
+### Test SSH Using an IP Address
+
+```text
+ssh -l Admin <device-ip-address>
+```
+
+Confirmed that SSH access using IP addresses was working.
+
+### Test SSH Using a Hostname
+
+```text
+ssh -l Admin dsw3
+```
+
+Initially failed before the fix and succeeded after the DHCP server's DNS settings were corrected.
+
+## 4. Final Verification
+
+Successfully accessed the network infrastructure devices using their hostnames after enabling the DHCP server's DNS option and adding the required records.
+
+**Final status:** Hostname-based SSH access restored.
