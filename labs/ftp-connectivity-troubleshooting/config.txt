@@ -1,0 +1,36 @@
+# Used ssh to log into BR1-SW1 via the Admin pc
+! Admin PC
+ssh -l Admin 10.10.10.5 (BR1-SW1 ip)
+#
+# OSPF network-type correction
+# Link between BR1-SW1 and the Branch 1 core switch
+#
+# BR1-SW1 interface facing the core switch: FastEthernet0/2
+# Branch 1 core-switch interface facing BR1-SW1: FastEthernet0/1
+#
+# The BR1-SW1 side had already been changed to point-to-point.
+# The core-switch side was still broadcast, creating a mismatch.
+# Apply the matching setting at each device as shown below.
+
+! BR1-SW1
+enable
+configure terminal
+interface FastEthernet0/2
+ ip ospf network point-to-point
+end
+copy running-config startup-config
+ssh -l Admin 10.10.10.6 (Core switch ip)
+
+! Branch 1 core switch
+enable
+configure terminal
+interface FastEthernet0/1
+ ip ospf network point-to-point
+end
+copy running-config startup-config
+
+! Verification commands (run as appropriate on either device)
+show ip ospf interface FastEthernet0/2
+show ip ospf interface FastEthernet0/1
+show ip ospf neighbor
+show running-config
