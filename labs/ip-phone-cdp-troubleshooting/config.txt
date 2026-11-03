@@ -1,0 +1,80 @@
+Cisco IP Phone Troubleshooting – CDP Configuration and Verification
+=======================================================================
+
+Purpose
+-------
+This file records the relevant investigation commands and the configuration
+change used to resolve the phone registration/call issue.
+
+Affected devices
+----------------
+- ASW4: FastEthernet0/5 connected to Phone1
+- ASW5: FastEthernet0/5 connected to Phone2
+
+Root cause
+----------
+CDP was disabled on the phone-facing FastEthernet0/5 interfaces of the
+access switches connected to Phone1 and Phone2.
+
+Investigation commands
+----------------------
+
+! Check directly connected CDP neighbors
+show cdp neighbors
+
+! Display detailed information about CDP neighbors
+show cdp neighbors detail
+
+! Check whether CDP is enabled on the phone-facing interface
+show cdp interface fastEthernet0/5
+
+! Inspect interface operational status and counters
+show interfaces fastEthernet0/5
+
+! Review VLAN configuration
+show vlan brief
+
+! Inspect the phone-facing interface configuration
+show running-config interface fastEthernet0/5
+
+! Check the MAC addresses learned on the phone-facing interface
+show mac address-table interface fastEthernet0/5
+
+
+Corrective configuration
+------------------------
+
+! Apply on ASW4 and ASW5, on the interface connected to the affected phone
+enable
+configure terminal
+interface fastEthernet0/5
+ cdp enable
+end
+
+
+Post-change verification
+------------------------
+
+! Confirm that the IP phone is now discovered
+show cdp neighbors
+
+! Confirm CDP status on the phone-facing interface
+show cdp interface fastEthernet0/5
+
+! Confirm the interface configuration
+show running-config interface fastEthernet0/5
+
+
+Validation performed
+--------------------
+- Phone1 and Phone2 appeared as CDP neighbors after the change.
+- Their assigned extension numbers appeared on the phone displays.
+- Test calls completed successfully.
+
+Notes
+-----
+- The lab instructions stated that CME and phone configurations were correct.
+- No routing or CME changes were needed.
+- FastEthernet0/5 is documented here based on the interface identified in
+  this lab. Confirm the actual phone-facing interface before reusing these
+  commands in another topology.
