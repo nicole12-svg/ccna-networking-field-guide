@@ -1,0 +1,64 @@
+!
+! Port Security and Remote Syslog - Lab Configuration Notes
+!
+! This file records the relevant configuration and operational commands
+! used to resolve the lab. It is not a complete device backup.
+! Replace interface ranges with the exact interfaces used in your topology.
+!
+
+! ------------------------------------------------------------
+! 1. Remote Syslog configuration
+! ------------------------------------------------------------
+! The correct Syslog server address in this lab is 172.16.10.251.
+! Apply on each switch that must forward logs to the central server.
+
+configure terminal
+ logging host 172.16.10.251
+ logging trap informational
+end
+
+!
+! Note: logging trap informational was already present on the inspected
+! switch configuration. The key missing remote-logging configuration
+! on SW5 was the logging host command.
+!
+
+! ------------------------------------------------------------
+! 2. Port-security policy on affected access interfaces
+! ------------------------------------------------------------
+! Port security remains enabled and the violation mode is restrict.
+! The explicit maximum of 2 was removed to restore the default maximum
+! of 1 secure MAC address per interface.
+
+configure terminal
+interface range fa0/2 - 5
+ shutdown
+exit
+do clear port-security sticky
+interface range fa0/2 - 5
+ no switchport port-security maximum 2
+ no shutdown
+end
+
+!
+! Important:
+! - Do not apply this to trunk or inter-switch links.
+! - The no switchport port-security maximum 2 command removes the
+!   explicit maximum of 2; it does not disable port security.
+! - Existing port-security configuration, including violation mode
+!   restrict, should be retained.
+!
+
+! ------------------------------------------------------------
+! 3. Verification commands
+! ------------------------------------------------------------
+
+show running-config
+show running-config | include logging
+show logging
+show port-security
+show port-security address
+show port-security interface fa0/5
+
+!
+
